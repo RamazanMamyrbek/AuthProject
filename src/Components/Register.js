@@ -8,13 +8,17 @@ import { circle_delete } from 'react-icons-kit/ikons/circle_delete'
 import { angleLeft } from 'react-icons-kit/fa/angleLeft'
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import 'tailwindcss/tailwind.css';
+import { fetchRegister } from "../Redux/Slices/AuthSlice";
 
 const Regist = () => {
+  const dispatch = useDispatch(); 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+
 
   const openModal = () => setIsOpen(true);
   const closeModal = () => setIsOpen(false);
@@ -27,6 +31,34 @@ const Regist = () => {
       console.log("Form has errors");
     }
   };
+
+  const onSubmite = async (values) => {
+    try {
+      const response = await dispatch(fetchRegister(values));
+      const data = response.payload;
+      
+      if (!data) {
+        return alert('Не удалось зарегистрироваться!');
+      }
+      
+      if ('token' in data) {
+        // Сохраняем данные пользователя в localStorage
+        const userData = {
+          token: data.token,
+          email: values.email, // Добавьте другие данные пользователя, если необходимо
+        };
+        
+        // Сохраняем данные пользователя в localStorage
+        window.localStorage.setItem('userData', JSON.stringify(userData));
+      } else {
+        alert('Не удалось зарегистрироваться!');
+      }
+    } catch (error) {
+      console.error('Ошибка при регистрации:', error);
+      alert('Произошла ошибка при регистрации!');
+    }
+  };
+  
 
   const { values, errors, touched, handleBlur, handleChange, handleSubmit } =
     useFormik({
@@ -50,36 +82,43 @@ const Regist = () => {
       {formSubmitted ? (
         <div>
           <div>
-            <div className="flex justify-center" style={{ zIndex: 1 }}>
-              <button className="w-[96px] h-[52px] z-10" type="button" onClick={handleBackButtonClick}><Icon icon={angleLeft} size={20} />Назад</button>
-            </div>
-            <div className="h-[100vh]  flex justify-around items-center">
-              <div className="w-[380px] h-[500px]  flex flex-col justify-between">
-                <img className="relative top-[-20px]" src={Lorby} alt="" />
-                <h1 className="text-5xl font-semibold leading-[71.28px] text-center">Lorby</h1>
-                <h2 className="text-[28px] font-normal leading-10 text-center">
-                  Твой личный репетитор
-                </h2>
+            <div className="flex  justify-center items-start" style={{ zIndex: 1 }}>
+              <NavLink to={"/"}>
+                <button className="w-[96px] h-[52px]" type="button" onClick={handleBackButtonClick}><Icon icon={angleLeft} size={20} />Назад</button>
+              </NavLink>
 
+            </div>
+            <div className="h-[100vh]  flex justify-evenly">
+              <div className="w-96 flex flex-col justify-center items-center">
+                <img src={Lorby} alt="" className="w-[480px] h-[400px] mb-[5px]" />
+                <div className="text-center">
+                  <h1 className="text-5xl font-semibold leading-12 mb-[10px] ">Lorby</h1>
+                  <h2 className="text-2xl font-normal leading-6 mb-[120px]">
+                    Твой личный репетитор
+                  </h2>
+                </div>
               </div>
-              <div className="w-[343px] h-[600px] flex flex-col justify-around items-center">
+
+
+              <div className="w-[343px] h-[550px] flex flex-col justify-center gap-[30px]">
                 <div className="w-[300px] text-center">
-                  <h2 className="text-xl font-semibold text-[19px] leading-[25px]">
+                  <h2 className="text-xl font-semibold text-[19px] leading-[25px] mb-[10px]">
                     Выслали письмо со ссылкой для завершения регистрации на {values.email}
                   </h2>
-                  <p className="mt-12 text-[15px]">
-                    Если письмо не пришло, не спеши ждать совиную почту - лучше проверь ящик “Спам”
+                  <p className="mt-12 text-[15px] mb-[20px]">
+                    Если письмо не пришло, не спеши ждать своиную почту - лучше <strong> проверь ящик “Спам”</strong>
                   </p>
-                  <p className="mt-4 text-center">(´｡• ω •｡`)</p>
+
+                  <p className=" text-center mb-[50px]"><strong>(´｡• ω •｡`)</strong></p>
 
                   <div>
-                    <p onClick={openModal} className="mt-8 cursor-pointer">Письмо не пришло</p>
+                    <p onClick={openModal} className=" cursor-pointer mb-[100px]">Письмо не пришло</p>
                     {isOpen && (
-                      <div className="fixed top-1/4 left-1/2 transform -translate-x-1/2 bg-white p-6 rounded-lg shadow-lg z-50">
+                      <div className="w-[350px] h-[250px] fixed top-1/4 left-1/2 transform -translate-x-1/2 bg-white p-6 rounded-3xl shadow-lg z-50">
                         <h2 className="text-xl font-semibold mb-4">Мы выслали еще одно письмо на указанную тобой почту  {values.email}</h2>
                         <p>Не забудь проверить
                           ящик “Спам”!</p>
-                        <button onClick={closeModal} className="mt-4 bg-black text-white px-4 py-2 rounded hover:bg-gray-900">Понятно!</button>
+                        <button onClick={closeModal} className="w-[300px] mt-4 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-900">Понятно!</button>
                       </div>
                     )}
                     {isOpen && <div className="fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 z-40" onClick={closeModal}></div>}
@@ -91,31 +130,35 @@ const Regist = () => {
         </div>
       ) : (
         <div>
-          <div className="flex justify-center" style={{ zIndex: 1 }}>
-            <button className="w-[96px] h-[52px] z-10" type="button" onClick={handleBackButtonClick}><Icon icon={angleLeft} size={20} />Назад</button>
-          </div>
-          <div className="h-[100vh]  flex justify-around items-center">
-            <div className="w-[380px] h-[500px]  flex flex-col justify-between">
-              <img src={Lorby} alt="" />
-              <div>
-                <h1 className="text-5xl font-semibold leading-[71.28px] text-center">Lorby</h1>
-                <h2 className="text-[28px] font-normal leading-10 text-center">
+          <div className="h-[100vh]  flex justify-evenly">
+            <div className="w-96 flex flex-col justify-center items-center">
+              <img src={Lorby} alt="" className="w-[480px] h-[400px]" />
+              <div className="text-center">
+                <h1 className="text-5xl font-semibold leading-12 mb-1">Lorby</h1>
+                <h2 className="text-2xl font-normal leading-6 mb-4">
                   Твой личный репетитор
                 </h2>
               </div>
             </div>
+            <div className="flex  justify-start items-start" style={{ zIndex: 1 }}>
+              <NavLink to={"/"}>
+                <button className="w-[96px] h-[52px]" type="button" onClick={handleBackButtonClick}><Icon icon={angleLeft} size={20} />Назад</button>
+              </NavLink>
 
-            <div className="w-[343px] h-[600px] flex flex-col justify-between">
-              <div className="mt-16 w-[300px] text-center" >
-                <h1 className="text-5xl font-semibold text-[32px] leading-[47px] text-center">
+            </div>
+            <div className="w-[343px] h-[550px] flex flex-col justify-center gap-[30px]">
+
+
+              <div className=" w-[300px] text-center" >
+                <h1 className="text-5xl font-semibold w-[100%] text-[30px] leading-[47px] ">
                   Создать аккаунт Lorby
                 </h1>
               </div>
 
-              <form onSubmit={handleSubmit} className="h-[454px] flex flex-col justify-between">
-                <div className="h-[336px] flex flex-col justify-between text-start">
+              <form onSubmit={handleSubmit} className="h-[354px] flex flex-col justify-around">
+                <div className="h-[410px] w-[343px] flex flex-col justify-around  gap-[10px]">
                   <input
-                    className={`bg-[#F8F8F8] py-[13px] rounded-xl px-4 ${errors.email && touched.email && values.email ? "bg-red-200" : "bg-[#F8F8F8]"} `}
+                    className={`bg-[#F8F8F8] w-[300px] h-[40px] pr-[100px] rounded-xl pl-4 ${errors.email && touched.email && values.email ? "bg-red-200" : "bg-[#F8F8F8]"} `}
                     value={values.email}
                     onChange={handleChange}
                     onBlur={handleBlur}
@@ -125,7 +168,7 @@ const Regist = () => {
                   />
                   {errors.email && touched.email && (<p className="text-red-500">{errors.email}</p>)}
                   <input
-                    className={`bg-[#F8F8F8] gap-[6px] py-[13px] rounded-xl px-4 ${errors.userName && touched.userName && values.userName ? "bg-red-200" : "bg-[#F8F8F8]"} `}
+                    className={`bg-[#F8F8F8] w-[300px] h-[40px] pr-[100px] rounded-xl pl-4 ${errors.userName && touched.userName && values.userName ? "bg-red-200" : "bg-[#F8F8F8]"} `}
                     value={values.userName}
                     onChange={handleChange}
                     onBlur={handleBlur}
@@ -134,10 +177,10 @@ const Regist = () => {
                     placeholder="Придумай логин"
                   />
                   {errors.userName && touched.userName && (<p className="text-red-500">{errors.userName}</p>)}
-                  <div className="h-[128px] flex flex-col justify-around">
+                  <div className="h-[128px] flex flex-col justify-start gap-[10px]">
                     <div className="relative">
                       <input
-                        className={`w-full bg-[#F8F8F8] py-[13px] rounded-xl px-4 ${errors.password && touched.password && values.password ? "bg-red-200" : "bg-[#F8F8F8]"} `}
+                        className={`bg-[#F8F8F8] w-[300px] h-[40px] pr-[100px] rounded-xl pl-4 ${errors.password && touched.password && values.password ? "bg-red-200" : "bg-[#F8F8F8]"} `}
                         value={values.password}
                         onChange={handleChange}
                         onBlur={handleBlur}
@@ -148,7 +191,7 @@ const Regist = () => {
                       {values.password && (
                         <span
                           onClick={() => setShowPassword((prev) => !prev)}
-                          className="absolute top-1/2 right-3 transform -translate-y-1/2 cursor-pointer"
+                          className="absolute top-[45%] right-[65px] transform -translate-y-1/2 cursor-pointer"
                         >
                           <Icon icon={showPassword ? basic_eye : basic_eye_closed} size={18} />
                         </span>
@@ -175,7 +218,7 @@ const Regist = () => {
                   </div>
                   <div className="relative">
                     <input
-                      className={`w-full bg-[#F8F8F8] py-[13px] rounded-xl px-4 pr-10 ${errors.confirmPassword && touched.confirmPassword && values.confirmPassword ? "bg-red-200" : "bg-[#F8F8F8]"} `}
+                      className={`relative bg-[#F8F8F8] w-[300px] h-[40px] pr-[100px] rounded-xl pl-4 ${errors.confirmPassword && touched.confirmPassword && values.confirmPassword ? "bg-red-200" : "bg-[#F8F8F8]"} `}
                       value={values.confirmPassword}
                       onChange={handleChange}
                       onBlur={handleBlur}
@@ -186,7 +229,7 @@ const Regist = () => {
                     {values.confirmPassword && (
                       <span
                         onClick={() => setShowConfirmPassword((prev) => !prev)}
-                        className="absolute top-1/2 right-3 transform -translate-y-1/2 cursor-pointer"
+                        className="absolute top-[45%] right-[65px] transform -translate-y-1/2 cursor-pointer"
                       >
                         <Icon icon={showConfirmPassword ? basic_eye : basic_eye_closed} size={18} />
                       </span>
@@ -194,8 +237,8 @@ const Regist = () => {
                   </div>
                   {errors.confirmPassword && touched.confirmPassword && (<p className="text-red-500">{errors.confirmPassword}</p>)}
                 </div>
-                <div className="flex justify-center  mt-8">
-                  <button type="submit" className="bg-[#292929] text-white py-[13px] rounded-xl px-6">Далее</button>
+                <div className="flex justify-start  mt-8">
+                  <button onSubmit={(e) => { e.preventDefault(); onSubmite(values); }} type="submit" className="text-white bg-[#292929] w-[300px] h-[40px] rounded-xl">Далее</button>
                 </div>
               </form>
             </div>
