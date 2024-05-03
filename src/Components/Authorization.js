@@ -6,8 +6,11 @@ import { basic_eye_closed } from "react-icons-kit/linea/basic_eye_closed";
 import { NavLink } from "react-router-dom";
 import { useFormik } from "formik";
 import { newSchema } from "../Schemas/Schemas";
+import { useDispatch } from 'react-redux';
+import { fetchAuth } from '../Store/AuthSlice';
 
 const Auth = () => {
+  const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -17,6 +20,7 @@ const Auth = () => {
       password: "",
     },
     validationSchema: newSchema,
+    
     // onSubmit: () => {
     //   if (values.userName !== 'validUser' || values.password !== 'validPassword') {
     //     setErrorMessage('Неверное имя пользователя или пароль');
@@ -24,10 +28,23 @@ const Auth = () => {
 
     //   }
     // }
+
   });
 
   const togglePasswordVisibility = () => {
     setShowPassword(prevState => !prevState);
+  };
+
+  const onSubmit = async (values) => {
+    const data = await dispatch(fetchAuth(values));
+    if (!data.payload) {
+      return alert('Не удалось авторизоваться!');
+    }
+    if ('token' in data.payload) {
+      window.localStorage.setItem('token', data.payload.token);
+    } else {
+      alert('Не удалось авторизоваться!');
+    }
   };
 
   return (
@@ -46,9 +63,9 @@ const Auth = () => {
           Вэлком бэк!
         </h1>
         <form onSubmit={handleSubmit} className="flex flex-col justify-between">
-          <div className="flex flex-col justify-between mb-6">
+          <div className="gap-[10px] flex flex-col justify-between mb-6">
             <input
-              className="bg-[#F8F8F8] py-2 px-4 rounded-xl mb-4"
+              className="bg-[#F8F8F8] w-[300px] h-[40px] pr-[100px] rounded-xl pl-4"
               value={values.userName}
               onChange={handleChange}
               type="text"
@@ -59,7 +76,7 @@ const Auth = () => {
 
             <div className="relative flex items-center mb-6">
               <input
-                className="bg-[#F8F8F8] py-2 px-4 rounded-xl pr-10"
+                className="bg-[#F8F8F8] w-[300px] h-[40px] pr-[100px] rounded-xl pl-4"
                 value={values.password}
                 onChange={handleChange}
                 type={showPassword ? "text" : "password"}
@@ -69,7 +86,7 @@ const Auth = () => {
               />
               <span
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                className="absolute right-3 top-[45%] transform -translate-y-1/2 cursor-pointer"
               >
                 <Icon
                   icon={showPassword ? basic_eye : basic_eye_closed}
