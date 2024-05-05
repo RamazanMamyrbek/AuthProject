@@ -11,18 +11,42 @@ import { NavLink } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import 'tailwindcss/tailwind.css';
 import { fetchRegister } from "../Store/AuthSlice";
+import { saveUserData } from "../Store/AuthSlice";
 
 const Regist = () => {
-  const dispatch = useDispatch(); 
+  const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-
+  const [errors, setErrors] = useState({});
 
   const openModal = () => setIsOpen(true);
   const closeModal = () => setIsOpen(false);
 
+  const onSubmite = async (values, errors) => {
+    try {
+      if (Object.keys(errors).length === 0) {
+        const response = await dispatch(fetchRegister(values));
+  
+        if (response.payload && response.payload.accessToken) {
+          const { accessToken } = response.payload;
+          localStorage.setItem('accessToken', accessToken);
+          setFormSubmitted(true);
+        } else {
+          alert('Не удалось зарегистрироваться!');
+        }
+      } else {
+        console.log("Form has errors");
+        setErrors(errors);
+      }
+    } catch (error) {
+      console.error('Ошибка при регистрации:', error);
+      alert('Произошла ошибка при регистрации!');
+    }
+  };
+  
+  
   const onSubmit = () => {
     if (Object.keys(errors).length === 0) {
       console.log("Form submitted");
@@ -31,40 +55,13 @@ const Regist = () => {
       console.log("Form has errors");
     }
   };
-
-  const onSubmite = async (values) => {
-    try {
-      const response = await dispatch(fetchRegister(values));
-      const data = response.payload;
-      
-      if (!data) {
-        return alert('Не удалось зарегистрироваться!');
-      }
-      
-      if ('token' in data) {
-        // Сохраняем данные пользователя в localStorage
-        const userData = {
-          token: data.token,
-          email: values.email, // Добавьте другие данные пользователя, если необходимо
-        };
-        
-        // Сохраняем данные пользователя в localStorage
-        window.localStorage.setItem('userData', JSON.stringify(userData));
-      } else {
-        alert('Не удалось зарегистрироваться!');
-      }
-    } catch (error) {
-      console.error('Ошибка при регистрации:', error);
-      alert('Произошла ошибка при регистрации!');
-    }
-  };
   
 
-  const { values, errors, touched, handleBlur, handleChange, handleSubmit } =
+  const { values, touched, handleBlur, handleChange, handleSubmit } =
     useFormik({
       initialValues: {
         email: "",
-        userName: "",
+        username: "",
         password: "",
         confirmPassword: "",
       },
@@ -72,7 +69,6 @@ const Regist = () => {
       onSubmit,
     });
 
-  console.log(errors);
   const handleBackButtonClick = () => {
     console.log('Назад');
   };
@@ -118,7 +114,8 @@ const Regist = () => {
                         <h2 className="text-xl font-semibold mb-4">Мы выслали еще одно письмо на указанную тобой почту  {values.email}</h2>
                         <p>Не забудь проверить
                           ящик “Спам”!</p>
-                        <button onClick={closeModal} className="w-[300px] mt-4 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-900">Понятно!</button>
+                        <NavLink to="/home" className="w-[300px] mt-4 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-900">Понятно!</NavLink>
+                        {/* <button onClick={closeModal} className="w-[300px] mt-4 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-900">Понятно!</button> */}
                       </div>
                     )}
                     {isOpen && <div className="fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-50 z-40" onClick={closeModal}></div>}
@@ -168,15 +165,15 @@ const Regist = () => {
                   />
                   {errors.email && touched.email && (<p className="text-red-500">{errors.email}</p>)}
                   <input
-                    className={`bg-[#F8F8F8] w-[300px] h-[40px] pr-[100px] rounded-xl pl-4 ${errors.userName && touched.userName && values.userName ? "bg-red-200" : "bg-[#F8F8F8]"} `}
-                    value={values.userName}
+                    className={`bg-[#F8F8F8] w-[300px] h-[40px] pr-[100px] rounded-xl pl-4 ${errors.username && touched.username && values.username ? "bg-red-200" : "bg-[#F8F8F8]"} `}
+                    value={values.username}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     type="text"
-                    name="userName"
+                    name="username"
                     placeholder="Придумай логин"
                   />
-                  {errors.userName && touched.userName && (<p className="text-red-500">{errors.userName}</p>)}
+                  {errors.username && touched.username && (<p className="text-red-500">{errors.username}</p>)}
                   <div className="h-[128px] flex flex-col justify-start gap-[10px]">
                     <div className="relative">
                       <input
@@ -238,7 +235,7 @@ const Regist = () => {
                   {errors.confirmPassword && touched.confirmPassword && (<p className="text-red-500">{errors.confirmPassword}</p>)}
                 </div>
                 <div className="flex justify-start  mt-8">
-                  <button onSubmit={(e) => { e.preventDefault(); onSubmite(values); }} type="submit" className="text-white bg-[#292929] w-[300px] h-[40px] rounded-xl">Далее</button>
+                  <button onClick={(e) => { e.preventDefault(); onSubmite(values, errors); }} type="submit" className="text-white bg-[#292929] w-[300px] h-[40px] rounded-xl">Далее</button>
                 </div>
               </form>
             </div>
@@ -250,6 +247,8 @@ const Regist = () => {
 };
 
 export default Regist;
+
+
 
 
 

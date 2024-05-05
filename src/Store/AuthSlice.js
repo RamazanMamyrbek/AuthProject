@@ -19,13 +19,14 @@ export const fetchAuthMe = createAsyncThunk('auth/fetchAuthMe', async () => {
 
 export const fetchAuthUserStatus = createAsyncThunk('auth/fetchAuthUserStatus', async () => {
     const { data } = await axios.get('/api/me');
-   
     return data;
 });
 
+
+
 const initialState = {
     data: null,
-    status: 'loading',
+    status: 'loading', 
     userStatus: null,
 };
 
@@ -38,22 +39,25 @@ const authSlice = createSlice({
             state.data = null;
             state.userStatus = null;
         },
+        saveUserData(state, action) {
+            state.data = action.payload;
+        },
     },
     extraReducers(builder) {
         // Login
         builder
-            .addCase(fetchAuth.pending, (state) => {
-                state.status = 'loading';
-                state.data = null;
-            })
-            .addCase(fetchAuth.fulfilled, (state, action) => {
-                state.status = 'loaded';
-                state.data = action.payload;
-            })
-            .addCase(fetchAuth.rejected, (state) => {
-                state.status = 'error';
-                state.data = null;
-            });
+        .addCase(fetchAuth.pending, (state) => {
+          state.status = 'loading';
+          state.data = null;
+        })
+        .addCase(fetchAuth.fulfilled, (state, action) => {
+          state.status = 'loaded';
+          state.data = action.payload;
+        })
+        .addCase(fetchAuth.rejected, (state) => {
+          state.status = 'error';
+          state.data = null; 
+        });
 
         // Register
         builder
@@ -99,6 +103,8 @@ const authSlice = createSlice({
                 state.status = 'error';
                 state.userStatus = null;
             });
+
+     
     },
 });
 
@@ -106,4 +112,6 @@ export const selectIsAuth = (state) => Boolean(state.auth.data);
 export const selectUserStatus = (state) => state.auth.userStatus;
 
 export const authReducer = authSlice.reducer;
-export const { logout } = authSlice.actions;
+export const { logout, saveUserData } = authSlice.actions;
+
+

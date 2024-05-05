@@ -13,43 +13,47 @@ const Auth = () => {
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  
 
   const { values, handleBlur, handleChange, handleSubmit } = useFormik({
     initialValues: {
-      userName: "",
+      username: "",
       password: "",
     },
     validationSchema: newSchema,
-    
-    // onSubmit: () => {
-    //   if (values.userName !== 'validUser' || values.password !== 'validPassword') {
-    //     setErrorMessage('Неверное имя пользователя или пароль');
-    //   } else {
+    onSubmit: async (values) => {
+      console.log('Форма отправлена');
+      try {
+        const response = await dispatch(fetchAuth(values));
+        console.log('Ответ от сервера:', response);
 
-    //   }
-    // }
+        if (response.accessToken) {
+          console.log('Токен:', response.accessToken);
+          const meResponse = await fetch('/api/me');
+          const userData = await meResponse.json();
 
+          if (userData.userStatus === 'First time') {
+            window.location.href = "/home";
+          } else {
+            window.location.href = "/home";
+          }
+        } else {
+          setErrorMessage('Неверный логин или пароль');
+        }
+      } catch (error) {
+        console.error('Ошибка аутентификации:', error);
+        setErrorMessage('Ошибка аутентификации. Пожалуйста, попробуйте еще раз.');
+      }
+    }
   });
 
   const togglePasswordVisibility = () => {
     setShowPassword(prevState => !prevState);
   };
 
-  const onSubmit = async (values) => {
-    const data = await dispatch(fetchAuth(values));
-    if (!data.payload) {
-      return alert('Не удалось авторизоваться!');
-    }
-    if ('token' in data.payload) {
-      window.localStorage.setItem('token', data.payload.token);
-    } else {
-      alert('Не удалось авторизоваться!');
-    }
-  };
-
   return (
-    <div className="h-screen border-2 border-black flex justify-around items-center">
-      <div className="w-96 h-96 flex flex-col justify-between" style={{ marginTop: '-100px' }}>
+    <div className="h-screen flex justify-around items-center ">
+      <div className="w-96 h-96 flex flex-col justify-between mt-[-100px]" >
         <img src={Lorby} alt="" className="w-280 h-280 mx-auto mb-2" />
         <div className="text-center">
           <h1 className="text-5xl font-semibold leading-12 mb-1">Lorby</h1>
@@ -66,10 +70,10 @@ const Auth = () => {
           <div className="gap-[10px] flex flex-col justify-between mb-6">
             <input
               className="bg-[#F8F8F8] w-[300px] h-[40px] pr-[100px] rounded-xl pl-4"
-              value={values.userName}
+              value={values.username}
               onChange={handleChange}
               type="text"
-              name="userName"
+              name="username"
               placeholder="Введи логин"
               onBlur={handleBlur}
             />
@@ -85,7 +89,7 @@ const Auth = () => {
                 onBlur={handleBlur}
               />
               <span
-                onClick={() => setShowPassword((prev) => !prev)}
+                onClick={togglePasswordVisibility}
                 className="absolute right-3 top-[45%] transform -translate-y-1/2 cursor-pointer"
               >
                 <Icon
@@ -95,12 +99,12 @@ const Auth = () => {
               </span>
             </div>
           </div>
-          <button className="bg-[#292929] text-white py-2 rounded-xl px-4 mt-2">
+          <button type="submit" className="bg-[#292929] text-white py-2 rounded-xl px-4 mt-2">
             Войти
           </button>
         </form>
 
-        <NavLink to={"/registration"}>
+        <NavLink to="/registration">
           <p className="py-4 text-center">У меня еще нет аккаунта</p>
         </NavLink>
       </div>
@@ -117,14 +121,6 @@ const Auth = () => {
 };
 
 export default Auth;
-
-
-
-
-
-
-
-
 
 
 
